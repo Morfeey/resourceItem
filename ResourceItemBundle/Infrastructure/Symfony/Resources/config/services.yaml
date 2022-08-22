@@ -1,0 +1,49 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  App\Bundles\ResourceItemBundle\:
+    resource: '../../../../*'
+    exclude:
+      - '../../../../Resources'
+      - '../../../../Infrastructure/Symfony'
+
+  App\Bundles\ResourceItemBundle\Application\:
+    resource: '../../../../Application/*'
+    exclude: '{Contract}'
+
+  App\Bundles\ResourceItemBundle\Domain\:
+    resource: '../../../../Domain/*'
+    exclude: '{Entity,Exception}'
+
+  _instanceof:
+    App\Bundles\InfrastructureBundle\Application\Contract\Handler\CommandHandlerInterface:
+      tags:
+        - { name: messenger.message_handler, bus: command.bus }
+
+    App\Bundles\InfrastructureBundle\Application\Contract\Handler\QueryHandlerInterface:
+      tags:
+        - { name: messenger.message_handler, bus: query.bus }
+
+    App\Bundles\ResourceItemBundle\Infrastructure\Parser\Handler\ResourceItemParserHandlerInterface:
+      tags: ['app.resource_item_parser_handler']
+
+    App\Bundles\ResourceItemBundle\Infrastructure\Parser\Handler\ByFiles\Service\Search\SearchStrategyInterface:
+      tags: ['app.resource_item_search_file_case']
+
+    App\Bundles\ResourceItemBundle\Infrastructure\Parser\Handler\ByFiles\Service\Content\ContentCorrectorInterface:
+      tags: ['app.resource_item_content_corrector']
+
+  App\Bundles\ResourceItemBundle\Infrastructure\Parser\Bus\ResourceItemParserBus:
+    arguments:
+      - !tagged_iterator app.resource_item_parser_handler
+
+  App\Bundles\ResourceItemBundle\Infrastructure\Parser\Handler\ByFiles\Service\SearchTxtFileService:
+    arguments:
+      - !tagged_iterator app.resource_item_search_file_case
+
+  App\Bundles\ResourceItemBundle\Infrastructure\Parser\Handler\ByFiles\Service\ContentService:
+    arguments:
+      - !tagged_iterator app.resource_item_content_corrector
